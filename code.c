@@ -119,3 +119,32 @@ int main(int argc, char *argv[]) {
             directory = optarg;
             break;
 
+        buffer[bytes_read] = '\0';
+        printf("Received: %s", buffer);
+
+        if (strncmp(buffer, "QUIT", 4) == 0) {
+            send(client_fd, "Goodbye!\n", 9, 0);
+            break;
+        } else if (strncmp(buffer, "USER", 4) == 0) {
+            sscanf(buffer, "USER %s %s", username, password);
+            if (authenticate_user(username, password, "passwords.cfg")) {
+                send(client_fd, "200 User authenticated.\n", 25, 0);
+                authenticated = 1;
+            } else {
+                send(client_fd, "400 Invalid credentials.\n", 25, 0);
+            }
+        } else if (!authenticated) {
+            send(client_fd, "403 Please authenticate first.\n", 31, 0);
+        } else if (strncmp(buffer, "LIST", 4) == 0) {
+            DIR *dir = opendir(".");
+            if (dir) {
+                struct dirent *entry;
+                while ((entry = readdir(dir)) != NULL) {
+                    if (entry->d_type == DT_REG) {
+                        snprintf(buffer, sizeof(buffer), "%s\n", entry->d_name);
+                        send(client_fd, buffer, strlen(buffer), 0);
+                    }
+                }
+                send(client_fd, ".\n", 2, 0);
+                closedir(dir);
+            }
