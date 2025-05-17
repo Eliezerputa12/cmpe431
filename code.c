@@ -105,3 +105,17 @@ int main(int argc, char *argv[]) {
     close(sd);
     return 0;
 }
+/* Main Server Function */
+int main(int argc, char *argv[]) {
+    int sd, opt, optval = 1;
+    struct sockaddr_in addr;
+    unsigned short port = PORT;
+    char *directory = NULL, *password_file = NULL;
+
+    // Parse command-line arguments
+    while ((opt = getopt(argc, argv, "d:p:u:")) != -1) {
+        switch (opt) {
+        case 'd':
+            directory = optarg;
+            break;
+
