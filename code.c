@@ -148,3 +148,49 @@ int main(int argc, char *argv[]) {
                 send(client_fd, ".\n", 2, 0);
                 closedir(dir);
             }
+  } else if (strncmp(buffer, "GET", 3) == 0) {
+            char filename[100];
+            sscanf(buffer, "GET %s", filename);
+            FILE *file = fopen(filename, "rb");
+            if (file) {
+                while ((bytes_read = fread(buffer, 1, sizeof(buffer), file)) > 0) {
+                    send(client_fd, buffer, bytes_read, 0);
+                }
+                fclose(file);
+                send(client_fd, "\r\n.\r\n", 5, 0);
+            } else {
+                send(client_fd, "404 File not found.\n", 20, 0);
+            }
+        } else if (strncmp(buffer, "PUT", 3) == 0) {
+            char filename[100];
+            sscanf(buffer, "PUT %s", filename);
+            FILE *file = fopen(filename, "wb");
+            if (file) {
+                while ((bytes_read = recv(client_fd, buffer, sizeof(buffer), 0)) > 0) {
+                    if (strstr(buffer, "\r\n.\r\n")) {
+                        fwrite(buffer, 1, bytes_read - 5, file);
+                        break;
+                    }
+                    fwrite(buffer, 1, bytes_read, file);
+                }
+                fclose(file);
+                send(client_fd, "200 File saved.\n", 17, 0);
+            } else {
+                send(client_fd, "400 File cannot save.\n", 23, 0);
+            }
+        } else if (strncmp(buffer, "DEL", 3) == 0) {
+            char filename[100];
+            sscanf(buffer, "DEL %s", filename);
+            if (remove(filename) == 0) {
+                send(client_fd, "200 File deleted.\n", 19, 0);
+            } else {
+                send(client_fd, "404 File not found.\n", 20, 0);
+            }
+        } else {
+            send(client_fd, "500 Unknown command.\n", 22, 0);
+        }
+    }
+
+    close(client_fd);
+    return NULL;
+}
