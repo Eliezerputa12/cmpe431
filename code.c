@@ -104,7 +104,7 @@ int main(int argc, char *argv[]) {
 
     close(sd);
     return 0;
-}
+
 /* Main Server Function */
 int main(int argc, char *argv[]) {
     int sd, opt, optval = 1;
