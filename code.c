@@ -194,3 +194,23 @@ int main(int argc, char *argv[]) {
     close(client_fd);
     return NULL;
 }
+
+/* User Authentication */
+int authenticate_user(const char *username, const char *password, const char *password_file) {
+    FILE *file = fopen(password_file, "r");
+    if (!file) return 0;
+
+    char line[100];
+    while (fgets(line, sizeof(line), file)) {
+        char stored_user[50], stored_pass[50];
+        sscanf(line, "%[^:]:%s", stored_user, stored_pass);
+        if (strcmp(username, stored_user) == 0 && strcmp(password, stored_pass) == 0) {
+            fclose(file);
+            return 1;
+        }
+    }
+
+    fclose(file);
+    return 0;
+}
+
